@@ -2,6 +2,5 @@
   <view name="main" default='true'/>
   <view name="thermostats"/>
   <view name="smoke_alarms" />
-  <view name="dashboards" />
   <view name="search" />
 </nav>
