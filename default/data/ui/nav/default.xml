@@ -1,5 +1,5 @@
 <nav search_view="search" color="#65A637">
-  <view name="main" default='true'/>
+  <view name="nest" default='true'/>
   <view name="thermostats"/>
   <view name="protects" />
   <view name="search" />

@@ -1,0 +1,79 @@
+<form>
+  <label>Protects</label>
+  <fieldset submitButton="false">
+    <input type="dropdown" token="deviceid" searchWhenChanged="true">
+      <label>Nest Smoke Alarm</label>
+      <selectFirstChoice>true</selectFirstChoice>
+      <search>
+        <query>index=nest smoke_co_alarms_id=* | map search="search index=nest  | spath path=data.devices.smoke_co_alarms.$$smoke_co_alarms_id$$ output=new" | spath input=new  |eval new=mvindex(name,0)." - ".name_long  | table name name_long device_id new | eval num=mvcount(name)| search num&gt;1 |dedup new</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <fieldForLabel>new</fieldForLabel>
+      <fieldForValue>device_id</fieldForValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Smoke Alarm - Days since last Manual Test</title>
+        <search>
+          <query>index=nest data.devices.smoke_co_alarms.$deviceid$.device_id=$deviceid$ | rename data.devices.smoke_co_alarms.$deviceid$.last_manual_test_time as "last_manual_test_time"| table sourcetype last_manual_test_time | eval now=now() | eval last_time= strptime(last_manual_test_time, "%Y-%m-%dT%H:%M:%S.%9QZ") | eval last_time = last_time-18000| eval diff=(now-last_time)/60/60/24 | sort+diff | head 1 |rename diff as "Days Since Last Manual Test" | table "Days Since Last Manual Test"</query>
+          <earliest>-4h@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="wrap">undefined</option>
+        <option name="rowNumbers">undefined</option>
+        <option name="drilldown">none</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="linkView">search</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Battery Health</title>
+        <search>
+          <query>index=nest data.devices.smoke_co_alarms.$deviceid$.device_id=$deviceid$  | table data.devices.smoke_co_alarms.$deviceid$.battery_health | rename data.devices.smoke_co_alarms.$deviceid$.battery_health as battery_health | search battery_health=*| table battery_health | dedup battery_health</query>
+          <earliest>-4h@m</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <search>
+          <query>index=nest data.devices.smoke_co_alarms.$deviceid$.device_id=$deviceid$   | rename data.devices.smoke_co_alarms.$deviceid$.smoke_alarm_state as "Alarm State"
+data.devices.smoke_co_alarms.$deviceid$.name_long as "Device Name" | table _time "Device Name" "Alarm State" | search "Alarm State"!="ok"</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="wrap">true</option>
+        <option name="rowNumbers">false</option>
+        <option name="drilldown">cell</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="count">10</option>
+      </table>
+    </panel>
+  </row>
+</form>

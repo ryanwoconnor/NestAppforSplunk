@@ -1,5 +1,5 @@
 <form>
-  <label>Main</label>
+  <label>Nest</label>
   <fieldset submitButton="false">
     <input type="dropdown" token="location" searchWhenChanged="true">
       <label>Location</label>
