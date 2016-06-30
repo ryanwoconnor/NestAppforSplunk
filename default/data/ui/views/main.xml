@@ -3,6 +3,7 @@
   <fieldset submitButton="false">
     <input type="dropdown" token="location" searchWhenChanged="true">
       <label>Location</label>
+      <selectFirstChoice>true</selectFirstChoice>
       <search>
         <query>|inputlookup device_id_lookup | table name</query>
         <earliest>-24h@h</earliest>

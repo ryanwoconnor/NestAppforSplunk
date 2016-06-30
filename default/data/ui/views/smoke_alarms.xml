@@ -3,6 +3,7 @@
   <fieldset submitButton="false">
     <input type="dropdown" token="deviceid" searchWhenChanged="true">
       <label>Nest Smoke Alarm</label>
+      <selectFirstChoice>true</selectFirstChoice>
       <search>
         <query>index=nest smoke_co_alarms_id=* | map search="search index=nest  | spath path=data.devices.smoke_co_alarms.$$smoke_co_alarms_id$$ output=new" | spath input=new  |eval new=mvindex(name,0)." - ".name_long  | table name name_long device_id new | eval num=mvcount(name)| search num&gt;1 |dedup new</query>
         <earliest>-24h@h</earliest>
