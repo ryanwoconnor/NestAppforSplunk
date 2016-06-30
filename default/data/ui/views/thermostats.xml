@@ -1,0 +1,285 @@
+<form refresh="3600">
+  <label>Thermostats</label>
+  <fieldset submitButton="false" autoRun="true">
+    <input type="time" token="time_picked" searchWhenChanged="true">
+      <label>Time Range</label>
+      <default>
+        <earliest>-4h@m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+    <input type="dropdown" token="deviceid" searchWhenChanged="true">
+      <label>Nest Thermostat</label>
+      <search>
+        <query>index=nest thermostats_id=* | map search="search index=nest sourcetype=$$sourcetype$$ source=$$source$$| spath path=data.devices.thermostats.$$thermostats_id$$ output=new" | spath input=new |  eval new=source." - ".name_long  | table source name_long device_id new | dedup source device_id</query>
+        <earliest>-4h@m</earliest>
+        <latest>now</latest>
+      </search>
+      <fieldForLabel>new</fieldForLabel>
+      <fieldForValue>device_id</fieldForValue>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <single>
+        <title>Minimum Temperature</title>
+        <search>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table data.devices.thermostats.$deviceid$.ambient_temperature_f | stats min(data.devices.thermostats.$deviceid$.ambient_temperature_f) as "Minimum Temp"</query>
+          <earliest>$time_picked.earliest$</earliest>
+          <latest>$time_picked.latest$</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Maximum Temperature</title>
+        <search>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table data.devices.thermostats.$deviceid$.ambient_temperature_f | stats max(data.devices.thermostats.$deviceid$.ambient_temperature_f) as "Maximum Temp"</query>
+          <earliest>$time_picked.earliest$</earliest>
+          <latest>$time_picked.latest$</latest>
+        </search>
+        <option name="wrap">undefined</option>
+        <option name="rowNumbers">undefined</option>
+        <option name="drilldown">none</option>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="linkView">search</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Minimum Humidity</title>
+        <search>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table data.devices.thermostats.$deviceid$.humidity | stats min(data.devices.thermostats.$deviceid$.humidity) as "Minimum Humidity"</query>
+          <earliest>$time_picked.earliest$</earliest>
+          <latest>$time_picked.latest$</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+      </single>
+    </panel>
+    <panel>
+      <single>
+        <title>Maximum Humidity</title>
+        <search>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table data.devices.thermostats.$deviceid$.humidity | stats max(data.devices.thermostats.$deviceid$.humidity) as "Maximum Humidity"</query>
+          <earliest>$time_picked.earliest$</earliest>
+          <latest>$time_picked.latest$</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="showSparkline">1</option>
+        <option name="showTrendIndicator">1</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="trendDisplayMode">absolute</option>
+        <option name="useColors">0</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Percent of Time Set at Various Degrees</title>
+        <search>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table _time data.devices.thermostats.$deviceid$.target_temperature_f  | rename data.devices.thermostats.$deviceid$.target_temperature_f as target_temperature_f | timechart span=1m max(target_temperature_f) AS "Temperature (F)" | stats count by "Temperature (F)"</query>
+          <earliest>$time_picked.earliest$</earliest>
+          <latest>$time_picked.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Percent of Time at Various Humidities</title>
+        <search>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table _time data.devices.thermostats.$deviceid$.humidity  | rename data.devices.thermostats.$deviceid$.humidity as humidity | stats count by humidity</query>
+          <earliest>$time_picked.earliest$</earliest>
+          <latest>$time_picked.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Temperature - Over Time</title>
+        <search>
+          <query>(index=nest AND data.devices.thermostats.$deviceid$.device_id=$deviceid$) OR index=main  | rename data.devices.thermostats.$deviceid$.ambient_temperature_f as ambient_temperature_f  data.devices.thermostats.$deviceid$.target_temperature_f as target_temperature_f | rename target_temperature_f AS "Target Inside Temperature (F)" ambient_temperature_f AS "Actual Inside Temperature (F)" | timechart span=5m max("Target Inside Temperature (F)") AS "Target Inside Temperature (F)" max("Actual Inside Temperature (F)") AS "Actual Inside Temperature (F)" max(temp_f) AS "Outside Temperature (F)"</query>
+          <earliest>$time_picked.earliest$</earliest>
+          <latest>$time_picked.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">line</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">connect</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+        <option name="wrap">true</option>
+        <option name="rowNumbers">false</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="count">10</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Percent of Time in Energy Saving Temperature</title>
+        <search>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table _time data.devices.thermostats.$deviceid$.has_leaf  | rename data.devices.thermostats.$deviceid$.has_leaf as has_leaf  | eval has_leaf2 = case(has_leaf=="true","Energy Saving", has_leaf=="false", "Not Energy Saving") | rename has_leaf2 as "Energy Saving?" | table "Energy Saving?" | stats count by "Energy Saving?"</query>
+          <earliest>$time_picked.earliest$</earliest>
+          <latest>$time_picked.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">gaps</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+    <panel>
+      <chart>
+        <title>Timechart of Energy Saving Mode</title>
+        <search>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table _time data.devices.thermostats.$deviceid$.has_leaf  | rename data.devices.thermostats.$deviceid$.has_leaf as has_leaf  | eval has_leaf2 = case(has_leaf=="true","Energy Saving", has_leaf=="false", "Not Energy Saving") | rename has_leaf2 as "Energy Saving?" | bucket _time span=5m | dedup has_leaf _time |  table _time "Energy Saving?" | timechart span=1m count by "Energy Saving?" | search "Energy Saving"!=0 OR "Not Energy Saving"!=0</query>
+          <earliest>$time_picked.earliest$</earliest>
+          <latest>$time_picked.latest$</latest>
+        </search>
+        <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
+        <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.visibility">visible</option>
+        <option name="charting.axisTitleY.visibility">visible</option>
+        <option name="charting.axisTitleY2.visibility">visible</option>
+        <option name="charting.axisX.scale">linear</option>
+        <option name="charting.axisY.scale">linear</option>
+        <option name="charting.axisY2.enabled">0</option>
+        <option name="charting.axisY2.scale">inherit</option>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.bubbleMaximumSize">50</option>
+        <option name="charting.chart.bubbleMinimumSize">10</option>
+        <option name="charting.chart.bubbleSizeBy">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.showDataLabels">none</option>
+        <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+        <option name="charting.chart.stackMode">default</option>
+        <option name="charting.chart.style">shiny</option>
+        <option name="charting.drilldown">all</option>
+        <option name="charting.layout.splitSeries">0</option>
+        <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
+        <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
+        <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+  </row>
+</form>

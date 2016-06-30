@@ -1,0 +1,47 @@
+#System Requirements: This app is mostly tested on Ubuntu though it should work on most Linux distros. 
+#
+#Installation:
+#This app install is simple. The most difficult part is obtaining an access_token but obtaining one is fairly straightforward. 
+#If you need assistance in obtaining an access_token you can use the following instructions or reach out on Splunk Answers. 
+#
+#
+#Obtaining an access_token for your Nest Account:
+#
+#You are more than welcome to create your own Nest app on developers.nest.com. These instructions would be slightly different if you go that route. However if you don't want to create your own Nest App you can leverage the one we have created by using the following instructions. 
+#
+#1. Visit the following URL: https://home.nest.com/login/oauth2?client_id=f4151b70-db18-43ac-a12b-1fbcd5f1cba9&state=STATE
+#2. Click accept to allow this app to query your device. 
+#3. Copy the Authorization Code Provided to you
+#4. Copy and paste the following command and replace <Auth_Code_Splunk> with the Authorization Code provded:
+#   
+#   curl -X POST "https://api.home.nest.com/oauth2/access_token?client_id=f4151b70-db18-43ac-a12b-1fbcd5f1cba9&code=<Auth_Code_Splunk>&client_secret=mdM3hEligo2PfGBsOMsaHFdvI&grant_type=authorization_code"
+#
+#5. Run the new curl command from the command line. 
+#6. Copy and paste the access_token into a new stanza in nest_tokens.conf in the local directory. 
+#7. Restart Splunk. 
+#
+#
+#
+#
+#Configuration:
+#
+#For the most part this app should just work. If you have the TA-wunderground app you can also install that for your city. https://splunkbase.splunk.com/app/1257/
+#
+#If you do have that app installed, feel free to update the lookup table home_view_city. 
+#There are two relevant fields:
+#name - this is the name of your nest account. It can be found in your data under data.structures.<account_id>.name
+#city - this is the City configured in the wunderground TA. 
+#
+#
+#Troubleshooting:
+#
+#This app is brand new so if you are having issues with it please reach out on Splunk Answers or contact me directly, roconnor@splunk.com. Look forward to hearing from you.
+#
+#
+#Running the app: 
+#
+#Simply click the app in the App Drop Down and you should be off and running. 
+#
+#Note that the saved search "Generate Device IDs" may take some time to populate the device_lookup_id.csv file. You can manually run that search the first time if you don't want to wait. 
+#
+#Some other dashboards will only populate if you have certain nest devices. For example if you don't have a Nest Thermostat, that dashboard won't be relevant to you.
