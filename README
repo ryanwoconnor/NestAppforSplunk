@@ -42,6 +42,6 @@
 #
 #Simply click the app in the App Drop Down and you should be off and running. 
 #
-#Note that the saved search "Generate Device IDs" may take some time to populate the device_lookup_id.csv file. You can manually run that search the first time if you don't want to wait. 
+#Note that the saved search "Generate Device IDs" may take up to an hour to populate the device_lookup_id.csv file. You can manually run the search if you don't want to wait. 
 #
 #Some other dashboards will only populate if you have certain nest devices. For example if you don't have a Nest Thermostat, that dashboard won't be relevant to you.
