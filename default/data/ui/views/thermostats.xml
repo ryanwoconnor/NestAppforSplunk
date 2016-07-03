@@ -12,7 +12,7 @@
       <label>Nest Thermostat</label>
       <selectFirstChoice>true</selectFirstChoice>
       <search>
-        <query>index=nest thermostats_id=* | map search="search index=nest sourcetype=$$sourcetype$$ source=$$source$$| spath path=data.devices.thermostats.$$thermostats_id$$ output=new" | spath input=new |  eval new=source." - ".name_long  | table source name_long device_id new | dedup source device_id</query>
+        <query>index=nest thermostats_id=* | mvexpand thermostats_id | map search="search index=nest sourcetype=$$sourcetype$$ source=$$source$$| spath path=data.devices.thermostats.$$thermostats_id$$ output=new" | spath input=new |  eval new=source." - ".name_long  | table source name_long device_id new | dedup source device_id</query>
         <earliest>-4h@m</earliest>
         <latest>now</latest>
       </search>
