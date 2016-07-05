@@ -48,7 +48,7 @@
       <single>
         <title>Current Temperature Inside</title>
         <search>
-          <query>sourcetype=nest_devices name=$location$ index=nest  | mvexpand thermostats_id|map search="search index=nest  | spath path=data.devices.thermostats.$$thermostats_id$$ output=new" | spath input=new |  search name=Ryhome |  table ambient_temperature_f | head 1 | eval "Current Temperature"=case(LIKE("$units$","c"), (ambient_temperature_f -32)/1.8, LIKE("$units$","f"), ambient_temperature_f) 
+          <query>sourcetype=nest_devices name=$location$ index=nest  | mvexpand thermostats_id|map search="search index=nest  | spath path=data.devices.thermostats.$$thermostats_id$$ output=new" | spath input=new |  search name=$location$ |  table ambient_temperature_f | head 1 | eval "Current Temperature"=case(LIKE("$units$","c"), (ambient_temperature_f -32)/1.8, LIKE("$units$","f"), ambient_temperature_f) 
 | table "Current Temperature"</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
