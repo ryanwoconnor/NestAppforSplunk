@@ -12,12 +12,19 @@
       <label>Nest Thermostat</label>
       <selectFirstChoice>true</selectFirstChoice>
       <search>
-        <query>index=nest thermostats_id=* | mvexpand thermostats_id | map search="search index=nest sourcetype=$$sourcetype$$ source=$$source$$| spath path=data.devices.thermostats.$$thermostats_id$$ output=new" | spath input=new |  eval new=source." - ".name_long  | table source name_long device_id new | dedup source device_id</query>
+        <query>index=nest thermostats_id=* |  mvexpand thermostats_id | map search="search index=nest sourcetype=$$sourcetype$$ source=$$source$$| spath path=data.devices.thermostats.$$thermostats_id$$ output=new" | spath input=new |  eval new=source." - ".name_long  | table source name_long device_id new | dedup source device_id</query>
         <earliest>-4h@m</earliest>
         <latest>now</latest>
       </search>
       <fieldForLabel>new</fieldForLabel>
       <fieldForValue>device_id</fieldForValue>
+    </input>
+    <input type="radio" token="units">
+      <label>Temperature Units</label>
+      <choice value="f">Fahrenheit</choice>
+      <choice value="c">Celcius</choice>
+      <default>f</default>
+      <initialValue>f</initialValue>
     </input>
   </fieldset>
   <row>
@@ -25,7 +32,7 @@
       <single>
         <title>Minimum Temperature</title>
         <search>
-          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table data.devices.thermostats.$deviceid$.ambient_temperature_f | stats min(data.devices.thermostats.$deviceid$.ambient_temperature_f) as "Minimum Temp"</query>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table data.devices.thermostats.$deviceid$.ambient_temperature_f | stats min(data.devices.thermostats.$deviceid$.ambient_temperature_f) as min_temp | eval "Minimum Temp"=case(LIKE("$units$","c"), (min_temp -32)/1.8, LIKE("$units$","f"), min_temp)  | table "Minimum Temp"</query>
           <earliest>$time_picked.earliest$</earliest>
           <latest>$time_picked.latest$</latest>
         </search>
@@ -40,13 +47,14 @@
         <option name="useThousandSeparators">1</option>
         <option name="drilldown">none</option>
         <option name="linkView">search</option>
+        <option name="unitPosition">after</option>
       </single>
     </panel>
     <panel>
       <single>
         <title>Maximum Temperature</title>
         <search>
-          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table data.devices.thermostats.$deviceid$.ambient_temperature_f | stats max(data.devices.thermostats.$deviceid$.ambient_temperature_f) as "Maximum Temp"</query>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table data.devices.thermostats.$deviceid$.ambient_temperature_f | stats max(data.devices.thermostats.$deviceid$.ambient_temperature_f) as max_temp |eval "Maximum Temp"=case(LIKE("$units$","c"), (max_temp -32)/1.8, LIKE("$units$","f"), max_temp)  | table "Maximum Temp"</query>
           <earliest>$time_picked.earliest$</earliest>
           <latest>$time_picked.latest$</latest>
         </search>
@@ -63,6 +71,7 @@
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
         <option name="linkView">search</option>
+        <option name="unitPosition">after</option>
       </single>
     </panel>
     <panel>
@@ -113,7 +122,7 @@
       <chart>
         <title>Percent of Time Set at Various Degrees</title>
         <search>
-          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table _time data.devices.thermostats.$deviceid$.target_temperature_f  | rename data.devices.thermostats.$deviceid$.target_temperature_f as target_temperature_f | timechart span=1m max(target_temperature_f) AS "Temperature (F)" | stats count by "Temperature (F)"</query>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table _time data.devices.thermostats.$deviceid$.target_temperature_f  | rename data.devices.thermostats.$deviceid$.target_temperature_f as target_temperature_f | timechart span=1m max(target_temperature_f) AS temps |  eval "Temperature"=case(LIKE("$units$","c"), (temps -32)/1.8, LIKE("$units$","f"), temps)  | stats count by "Temperature"</query>
           <earliest>$time_picked.earliest$</earliest>
           <latest>$time_picked.latest$</latest>
         </search>
@@ -181,7 +190,7 @@
       <chart>
         <title>Temperature - Over Time</title>
         <search>
-          <query>(index=nest AND data.devices.thermostats.$deviceid$.device_id=$deviceid$) OR index=main  | rename data.devices.thermostats.$deviceid$.ambient_temperature_f as ambient_temperature_f  data.devices.thermostats.$deviceid$.target_temperature_f as target_temperature_f | rename target_temperature_f AS "Target Inside Temperature (F)" ambient_temperature_f AS "Actual Inside Temperature (F)" | timechart span=5m max("Target Inside Temperature (F)") AS "Target Inside Temperature (F)" max("Actual Inside Temperature (F)") AS "Actual Inside Temperature (F)" max(temp_f) AS "Outside Temperature (F)"</query>
+          <query>(index=nest AND data.devices.thermostats.$deviceid$.device_id=$deviceid$) OR index=main  | rename data.devices.thermostats.$deviceid$.ambient_temperature_f as ambient_temperature_f  data.devices.thermostats.$deviceid$.target_temperature_f as target_temperature_f | rename target_temperature_f AS "Target Inside Temperature (F)" ambient_temperature_f AS "Actual Inside Temperature (F)" |timechart span=5m max("Target Inside Temperature (F)") AS targ_inside max("Actual Inside Temperature (F)") AS actual_inside max(temp_f) AS outside |  eval "Target Inside Temperature"=case(LIKE("$units$","c"), (targ_inside -32)/1.8, LIKE("$units$","f"), targ_inside) | eval "Actual Inside Temperature"=case(LIKE("$units$","c"), (actual_inside -32)/1.8, LIKE("$units$","f"), actual_inside) | eval "Outside Temperature"=case(LIKE("$units$","c"), (outside -32)/1.8, LIKE("$units$","f"), outside)| fields - targ_inside actual_inside outside</query>
           <earliest>$time_picked.earliest$</earliest>
           <latest>$time_picked.latest$</latest>
         </search>

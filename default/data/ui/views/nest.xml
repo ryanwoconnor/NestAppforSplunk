@@ -5,20 +5,28 @@
       <label>Location</label>
       <selectFirstChoice>true</selectFirstChoice>
       <search>
-        <query>|inputlookup device_id_lookup | table name</query>
+        <query>|inputlookup device_id_lookup | table name | dedup name</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
       <fieldForLabel>name</fieldForLabel>
       <fieldForValue>name</fieldForValue>
     </input>
+    <input type="radio" token="units">
+      <label>Temperature Units</label>
+      <choice value="f">Fahrenheit</choice>
+      <choice value="c">Celcius</choice>
+      <default>f</default>
+      <initialValue>f</initialValue>
+    </input>
   </fieldset>
   <row>
     <panel>
       <single>
-        <title>Current Temperature (F) Outside</title>
+        <title>Current Temperature Outside</title>
         <search>
-          <query>sourcetype=nest_devices index=nest name=$location$  | map search="search index=* city=$$city$$ temp_f=*" | table temp_f | head 1</query>
+          <query>sourcetype=nest_devices index=nest name=$location$  | mvexpand city| map search="search index=* city=$$city$$ temp_f=*"  | head 1| eval temp=case(LIKE("$units$","c"), (temp_f -32)/1.8, LIKE("$units$","f"), temp_f) 
+| table temp</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
         </search>
@@ -40,7 +48,8 @@
       <single>
         <title>Current Temperature Inside</title>
         <search>
-          <query>sourcetype=nest_devices name=$location$ index=nest  | map search="search index=nest name=$$name$$ | spath path=data.devices.thermostats.$$thermostats_id$$ output=new" | spath input=new | table ambient_temperature_f | rename ambient_temperature_f as "Current Temperature" | head 1</query>
+          <query>sourcetype=nest_devices name=$location$ index=nest  | mvexpand thermostats_id|map search="search index=nest  | spath path=data.devices.thermostats.$$thermostats_id$$ output=new" | spath input=new |  search name=Ryhome |  table ambient_temperature_f | head 1 | eval "Current Temperature"=case(LIKE("$units$","c"), (ambient_temperature_f -32)/1.8, LIKE("$units$","f"), ambient_temperature_f) 
+| table "Current Temperature"</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
         </search>
@@ -62,7 +71,7 @@
       <single>
         <title>Smoke Alarm Battery Health</title>
         <search>
-          <query>sourcetype=nest_devices name=$location$ index=* | map search="search index=nest sourcetype=$$sourcetype$$ name=$$name$$| spath path=data.devices.smoke_co_alarms.$$smoke_co_alarms_id$$ output=new" | spath input=new  | table battery_health | head 1</query>
+          <query>sourcetype=nest_devices name=$location$ index=nest | mvexpand smoke_co_alarms_id| map search="search index=nest sourcetype=$$sourcetype$$ | spath path=data.devices.smoke_co_alarms.$$smoke_co_alarms_id$$ output=new" | spath input=new  | search name=$location$ | table battery_health | head 1</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
         </search>
@@ -88,7 +97,7 @@
       <chart>
         <title>Time At Home vs Away</title>
         <search>
-          <query>sourcetype=nest_devices name=$location$ index=*  | map search="search index=nest sourcetype=$$sourcetype$$ source=$$source$$| spath path=data.structures.$$id$$ output=new" | spath input=new | table _time source away | bucket _time span=1m | dedup away _time | timechart span=1m count by away | search home=1 OR "auto-away"=1</query>
+          <query>sourcetype=nest_devices name=$location$ index=*  | mvexpand id | map search="search index=nest sourcetype=$$sourcetype$$ source=$$source$$| spath path=data.structures.$$id$$ output=new" | spath input=new | search name=$location$| table _time source away | bucket _time span=1m | dedup away _time | timechart span=1m count by away | search home=1 OR "auto-away"=1 OR away=1</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
         </search>
@@ -131,7 +140,7 @@
       <title>List of Devices</title>
       <table>
         <search>
-          <query>index=nest name=$location$ | table name smoke_co_alarms_id thermostats_id | dedup name | rename thermostats_id as "Thermostat ID" smoke_co_alarms_id as "Smoke/CO alarm ID"</query>
+          <query>index=nest name=$location$ | table name smoke_co_alarms_id thermostats_id | dedup name | rename thermostats_id as "Thermostat ID" smoke_co_alarms_id as "Smoke/CO alarm ID" | fillnull value="" "Smoke/CO alarm ID" "Thermostat ID" |mvexpand "Thermostat ID" |mvexpand "Smoke/CO alarm ID" | mvexpand name |dedup "Thermostat ID" "Smoke/CO alarm ID" |  mvexpand "Thermostat ID" |mvexpand "Smoke/CO alarm ID" | mvexpand name |dedup "Thermostat ID" "Smoke/CO alarm ID"</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
         </search>
