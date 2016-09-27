@@ -25,53 +25,56 @@
       <single>
         <title>Current Temperature Outside</title>
         <search>
-          <query>sourcetype=nest_devices index=nest name=$location$  | mvexpand city| map search="search index=* city=$$city$$ temp_f=*"  | head 1| eval temp=case(LIKE("$units$","c"), (temp_f -32)/1.8, LIKE("$units$","f"), temp_f) 
-| table temp</query>
+          <query>sourcetype=nest_devices index=nest name=$location$  | mvexpand city| map search="search index=* city=$$city$$ temp_f=*" | eval temp=case(LIKE("$units$","c"), (temp_f -32)/1.8, LIKE("$units$","f"), temp_f)  | timechart cont=FALSE span=5m first(temp)</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
         </search>
-        <option name="colorBy">value</option>
+        <option name="colorBy">trend</option>
         <option name="colorMode">none</option>
         <option name="numberPrecision">0</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
-        <option name="trendColorInterpretation">standard</option>
+        <option name="trendColorInterpretation">inverse</option>
         <option name="trendDisplayMode">absolute</option>
-        <option name="useColors">0</option>
+        <option name="useColors">1</option>
         <option name="useThousandSeparators">1</option>
         <option name="drilldown">none</option>
         <option name="linkView">search</option>
         <option name="unitPosition">after</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
       </single>
     </panel>
     <panel>
       <single>
         <title>Current Temperature Inside</title>
         <search>
-          <query>sourcetype=nest_devices name=$location$ index=nest  | mvexpand thermostats_id|map search="search index=nest  | spath path=data.devices.thermostats.$$thermostats_id$$ output=new" | spath input=new |  search name=$location$ |  table ambient_temperature_f | head 1 | eval "Current Temperature"=case(LIKE("$units$","c"), (ambient_temperature_f -32)/1.8, LIKE("$units$","f"), ambient_temperature_f) 
-| table "Current Temperature"</query>
+          <query>sourcetype=nest_devices name=$location$ index=nest  | mvexpand thermostats_id|map search="search index=nest  | spath path=data.devices.thermostats.$$thermostats_id$$ output=new" | spath input=new |  search name=$location$ |  table _time ambient_temperature_f  | eval "Current Temperature"=case(LIKE("$units$","c"), (ambient_temperature_f -32)/1.8, LIKE("$units$","f"), ambient_temperature_f)  | timechart cont=FALSE span=5m first("Current Temperature")</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
         </search>
-        <option name="colorBy">value</option>
+        <option name="colorBy">trend</option>
         <option name="colorMode">none</option>
         <option name="numberPrecision">0</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
-        <option name="trendColorInterpretation">standard</option>
+        <option name="trendColorInterpretation">inverse</option>
         <option name="trendDisplayMode">absolute</option>
-        <option name="useColors">0</option>
+        <option name="useColors">1</option>
         <option name="useThousandSeparators">1</option>
         <option name="drilldown">none</option>
         <option name="linkView">search</option>
         <option name="unitPosition">after</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
+        <option name="trendInterval">-1h</option>
       </single>
     </panel>
     <panel>
       <single>
         <title>Smoke Alarm Battery Health</title>
         <search>
-          <query>sourcetype=nest_devices name=$location$ index=nest | mvexpand smoke_co_alarms_id| map search="search index=nest sourcetype=$$sourcetype$$ | spath path=data.devices.smoke_co_alarms.$$smoke_co_alarms_id$$ output=new" | spath input=new  | search name=$location$ | table battery_health | head 1</query>
+          <query>sourcetype=nest_devices name=$location$ index=nest | mvexpand smoke_co_alarms_id| map search="search index=nest sourcetype=$$sourcetype$$ | spath path=data.devices.smoke_co_alarms.$$smoke_co_alarms_id$$ output=new" | spath input=new  | search name=$location$ | table battery_health | head 1 | eval alert_level =case(battery_health=="ok",1,1=1,2) | rangemap field=alert_level low=1-1 severe=2-2</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
         </search>
@@ -137,10 +140,10 @@
       </chart>
     </panel>
     <panel>
-      <title>List of Devices</title>
+      <title>Number of Devices</title>
       <table>
         <search>
-          <query>index=nest name=$location$ | table name smoke_co_alarms_id thermostats_id | dedup name | rename thermostats_id as "Thermostat ID" smoke_co_alarms_id as "Smoke/CO alarm ID" | fillnull value="" "Smoke/CO alarm ID" "Thermostat ID" |mvexpand "Thermostat ID" |mvexpand "Smoke/CO alarm ID" | mvexpand name |dedup "Thermostat ID" "Smoke/CO alarm ID" |  mvexpand "Thermostat ID" |mvexpand "Smoke/CO alarm ID" | mvexpand name |dedup "Thermostat ID" "Smoke/CO alarm ID"</query>
+          <query>index=nest name=$location$ | table name smoke_co_alarms_id thermostats_id | dedup name | rename thermostats_id as "Thermostat ID" smoke_co_alarms_id as "Smoke/CO alarm ID" | fillnull value="" "Smoke/CO alarm ID" "Thermostat ID" |mvexpand "Thermostat ID" |mvexpand "Smoke/CO alarm ID" | mvexpand name |dedup "Thermostat ID" "Smoke/CO alarm ID" |  mvexpand "Thermostat ID" |mvexpand "Smoke/CO alarm ID" | mvexpand name |dedup "Thermostat ID" "Smoke/CO alarm ID" | stats dc("Thermostat ID") dc("Smoke/CO alarm ID") by name | rename "dc(Smoke/CO alarm ID)" as "Smoke Alarms" "dc(Thermostat ID)" as "Thermostats"</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
         </search>
