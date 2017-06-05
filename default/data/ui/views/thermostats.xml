@@ -26,11 +26,24 @@
       <default>f</default>
       <initialValue>f</initialValue>
     </input>
+    <input type="dropdown" token="hvac_mode" searchWhenChanged="true">
+      <label>Mode</label>
+      <choice value="*">*</choice>
+      <fieldForLabel>hvac_mode</fieldForLabel>
+      <fieldForValue>hvac_mode</fieldForValue>
+      <search>
+        <query>|inputlookup hvac_mode.csv</query>
+        <earliest>-7d@h</earliest>
+        <latest>now</latest>
+      </search>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
   </fieldset>
   <row>
     <panel>
       <single>
-        <title>Minimum Temperature</title>
+        <title>Minimum Inside Temperature</title>
         <search>
           <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table data.devices.thermostats.$deviceid$.ambient_temperature_f | stats min(data.devices.thermostats.$deviceid$.ambient_temperature_f) as min_temp | eval "Minimum Temp"=case(LIKE("$units$","c"), (min_temp -32)/1.8, LIKE("$units$","f"), min_temp)  | table "Minimum Temp"</query>
           <earliest>$time_picked.earliest$</earliest>
@@ -38,40 +51,38 @@
         </search>
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
         <option name="numberPrecision">0</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
-        <option name="drilldown">none</option>
-        <option name="linkView">search</option>
-        <option name="unitPosition">after</option>
       </single>
     </panel>
     <panel>
       <single>
-        <title>Maximum Temperature</title>
+        <title>Maximum Inside Temperature</title>
         <search>
           <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table data.devices.thermostats.$deviceid$.ambient_temperature_f | stats max(data.devices.thermostats.$deviceid$.ambient_temperature_f) as max_temp |eval "Maximum Temp"=case(LIKE("$units$","c"), (max_temp -32)/1.8, LIKE("$units$","f"), max_temp)  | table "Maximum Temp"</query>
           <earliest>$time_picked.earliest$</earliest>
           <latest>$time_picked.latest$</latest>
         </search>
-        <option name="wrap">undefined</option>
-        <option name="rowNumbers">undefined</option>
-        <option name="drilldown">none</option>
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
         <option name="numberPrecision">0</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
         <option name="trendColorInterpretation">standard</option>
         <option name="trendDisplayMode">absolute</option>
+        <option name="unitPosition">after</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
-        <option name="linkView">search</option>
-        <option name="unitPosition">after</option>
       </single>
     </panel>
     <panel>
@@ -118,11 +129,20 @@
     </panel>
   </row>
   <row>
-    <panel>
+    <panel depends="$panel_show1$">
+      <title>Percent of Time Set at Various Degrees</title>
       <chart>
-        <title>Percent of Time Set at Various Degrees</title>
+        <title>In Heat, Cool, and Eco Modes</title>
         <search>
-          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table _time data.devices.thermostats.$deviceid$.target_temperature_f  | rename data.devices.thermostats.$deviceid$.target_temperature_f as target_temperature_f | timechart span=1m max(target_temperature_f) AS temps |  eval "Temperature"=case(LIKE("$units$","c"), (temps -32)/1.8, LIKE("$units$","f"), temps)  | stats count by "Temperature"</query>
+          <query>index=nest data.devices.thermostats.$deviceid$.device_id=$deviceid$ data.devices.thermostats.$deviceid$.hvac_mode!=heat-cool AND data.devices.thermostats.$deviceid$.hvac_mode!=off | table _time data.devices.thermostats.$deviceid$.target_temperature_f  | rename data.devices.thermostats.$deviceid$.target_temperature_f as target_temperature_f | timechart span=1m max(target_temperature_f) AS temps |  eval "Temperature"=case(LIKE("$units$","c"), (temps -32)/1.8, LIKE("$units$","f"), temps)  | stats count by "Temperature"</query>
+          <progress>
+            <condition match="'job.resultCount' &gt; 0">
+              <set token="panel_show1">true</set>
+            </condition>
+            <condition>
+              <unset token="panel_show1"></unset>
+            </condition>
+          </progress>
           <earliest>$time_picked.earliest$</earliest>
           <latest>$time_picked.latest$</latest>
         </search>
@@ -149,6 +169,27 @@
         <option name="charting.layout.splitSeries.allowIndependentYRanges">0</option>
         <option name="charting.legend.labelStyle.overflowMode">ellipsisMiddle</option>
         <option name="charting.legend.placement">right</option>
+      </chart>
+    </panel>
+    <panel depends="$panel_show$">
+      <title>High and Low Temperature over Time</title>
+      <chart>
+        <title>In Heat/Cool Mode</title>
+        <search>
+          <query>index=nest data.devices.thermostats.$deviceid$.hvac_mode=heat-cool data.devices.thermostats.$deviceid$.device_id=$deviceid$  | table _time data.devices.thermostats.$deviceid$.target_temperature_high_f data.devices.thermostats.$deviceid$.ambient_temperature_f data.devices.thermostats.$deviceid$.target_temperature_low_f  | rename data.devices.thermostats.$deviceid$.target_temperature_high_f as target_temperature_high_f data.devices.thermostats.$deviceid$.target_temperature_low_f as target_temperature_low_f data.devices.thermostats.$deviceid$.ambient_temperature_f as ambient_temperature_f| timechart span=1m max(target_temperature_high_f) AS high_temps max(target_temperature_low_f) AS low_temps max(ambient_temperature_f) AS actual_temp |  eval "High Temperature"=case(LIKE("$units$","c"), (high_temps -32)/1.8, LIKE("$units$","f"), high_temps)  |eval "Inside Temperature"=case(LIKE("f","c"), (actual_temp -32)/1.8, LIKE("f","f"), actual_temp) |eval "Low Temperature"=case(LIKE("$units$","c"), (low_temps -32)/1.8, LIKE("$units$","f"), low_temps) | fields - high_temps low_temps actual_temp</query>
+          <progress>
+            <condition match="'job.resultCount' &gt; 0">
+              <set token="panel_show">true</set>
+            </condition>
+            <condition>
+              <unset token="panel_show"></unset>
+            </condition>
+          </progress>
+          <earliest>$time_picked.earliest$</earliest>
+          <latest>$time_picked.latest$</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
       </chart>
     </panel>
     <panel>
@@ -190,7 +231,7 @@
       <chart>
         <title>Temperature - Over Time</title>
         <search>
-          <query>(index=nest AND data.devices.thermostats.$deviceid$.device_id=$deviceid$) OR index=main  | rename data.devices.thermostats.$deviceid$.ambient_temperature_f as ambient_temperature_f  data.devices.thermostats.$deviceid$.target_temperature_f as target_temperature_f | rename target_temperature_f AS "Target Inside Temperature (F)" ambient_temperature_f AS "Actual Inside Temperature (F)" |timechart span=5m max("Target Inside Temperature (F)") AS targ_inside max("Actual Inside Temperature (F)") AS actual_inside max(temp_f) AS outside |  eval "Target Inside Temperature"=case(LIKE("$units$","c"), (targ_inside -32)/1.8, LIKE("$units$","f"), targ_inside) | eval "Actual Inside Temperature"=case(LIKE("$units$","c"), (actual_inside -32)/1.8, LIKE("$units$","f"), actual_inside) | eval "Outside Temperature"=case(LIKE("$units$","c"), (outside -32)/1.8, LIKE("$units$","f"), outside)| fields - targ_inside actual_inside outside</query>
+          <query>(index=nest AND data.devices.thermostats.$deviceid$.device_id=$deviceid$ data.devices.thermostats.$deviceid$.hvac_mode=$hvac_mode$) OR index=main  | rename data.devices.thermostats.$deviceid$.ambient_temperature_f as ambient_temperature_f  data.devices.thermostats.$deviceid$.target_temperature_f as target_temperature_f | rename target_temperature_f AS "Target Inside Temperature (F)" ambient_temperature_f AS "Actual Inside Temperature (F)" |timechart span=5m max("Target Inside Temperature (F)") AS targ_inside max("Actual Inside Temperature (F)") AS actual_inside max(temp_f) AS outside |  eval "Target Inside Temperature"=case(LIKE("$units$","c"), (targ_inside -32)/1.8, LIKE("$units$","f"), targ_inside) | eval "Actual Inside Temperature"=case(LIKE("$units$","c"), (actual_inside -32)/1.8, LIKE("$units$","f"), actual_inside) | eval "Outside Temperature"=case(LIKE("$units$","c"), (outside -32)/1.8, LIKE("$units$","f"), outside)| fields - targ_inside actual_inside outside</query>
           <earliest>$time_picked.earliest$</earliest>
           <latest>$time_picked.latest$</latest>
         </search>
