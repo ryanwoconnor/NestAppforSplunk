@@ -100,7 +100,7 @@
       <chart>
         <title>Time At Home vs Away</title>
         <search>
-          <query>sourcetype=nest_devices name=$location$ index=*  | mvexpand id | map search="search index=nest sourcetype=$$sourcetype$$ source=$$source$$| spath path=data.structures.$$id$$ output=new" | spath input=new | search name=$location$| table _time source away | bucket _time span=1m | dedup away _time | timechart span=1m count by away | search home=1 OR "auto-away"=1 OR away=1</query>
+          <query>sourcetype=nest_devices name=$location$ index=*  | mvexpand id | map search="search index=nest sourcetype=$$sourcetype$$ source=$$source$$| spath path=data.structures.$$id$$ output=new" | spath input=new | search name=$location$| table _time source away | bucket _time span=1m | dedup away _time | timechart span=1m count by away | search home=1 OR away=1</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
         </search>
