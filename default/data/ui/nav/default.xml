@@ -1,6 +1,9 @@
-<nav search_view="search" color="#65A637">
+<nav search_view="search" color="#00AFD8">
   <view name="nest" default='true'/>
   <view name="thermostats"/>
   <view name="protects" />
+  <collection label="Setup">
+  <saved name="Generate Device IDs" />
+  </collection>
   <view name="search" />
 </nav>
