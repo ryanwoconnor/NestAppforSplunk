@@ -46,7 +46,6 @@
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
         <option name="drilldown">none</option>
-        <option name="linkView">search</option>
         <option name="unitPosition">after</option>
       </single>
     </panel>
@@ -70,7 +69,6 @@
         <option name="trendDisplayMode">absolute</option>
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
-        <option name="linkView">search</option>
         <option name="unitPosition">after</option>
       </single>
     </panel>
@@ -92,7 +90,6 @@
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
         <option name="drilldown">none</option>
-        <option name="linkView">search</option>
       </single>
     </panel>
     <panel>
@@ -113,7 +110,6 @@
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
         <option name="drilldown">none</option>
-        <option name="linkView">search</option>
       </single>
     </panel>
   </row>
