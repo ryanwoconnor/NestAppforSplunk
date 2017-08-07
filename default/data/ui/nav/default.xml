@@ -2,8 +2,5 @@
   <view name="nest" default='true'/>
   <view name="thermostats"/>
   <view name="protects" />
-  <collection label="Setup">
-  <saved name="Generate Device IDs" />
-  </collection>
   <view name="search" />
 </nav>
