@@ -18,7 +18,7 @@
       <selectFirstChoice>true</selectFirstChoice>
       <search>
         <query>index=nest thermostats_id=*| eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,thermostats_id) | eval id=mvindex(thermostats_idIdx,idx) | eval name2=mvindex(thermostats_name_long,idx)  | table id name2 name | rename id as thermostats_id name2 as thermostats_name_long | dedup thermostats_id thermostats_name_long | eval name=name."-".thermostats_name_long</query>
-        <earliest>-4h@m</earliest>
+        <earliest>-24h@m</earliest>
         <latest>now</latest>
       </search>
       <fieldForLabel>name</fieldForLabel>
