@@ -17,11 +17,11 @@
       <label>Nest Thermostat</label>
       <selectFirstChoice>true</selectFirstChoice>
       <search>
-        <query>index=nest sourcetype=nest_devices | eval new=name." - ".thermostats_name_long | mvexpand thermostats_id | table source thermostats_name_long structure_id new thermostats_id | dedup new thermostats_id</query>
+        <query>index=nest thermostats_id=*| eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval id=mvindex(thermostats_idIdx,idx) | eval name2=mvindex(thermostats_name_long,idx)  | table id name2 name | rename id as thermostats_id name2 as thermostats_name_long | dedup thermostats_id thermostats_name_long | eval name=name."-".thermostats_name_long</query>
         <earliest>-4h@m</earliest>
         <latest>now</latest>
       </search>
-      <fieldForLabel>new</fieldForLabel>
+      <fieldForLabel>name</fieldForLabel>
       <fieldForValue>thermostats_id</fieldForValue>
     </input>
     <input type="radio" token="units">
@@ -50,7 +50,7 @@
       <single>
         <title>Minimum Inside Temperature</title>
         <search base="baseSearch">
-          <query>search thermostats_id=$thermostats_id$   |  stats min(ambient_temperature_f) as min_temp | eval "Minimum Temp"=case(LIKE("f","c"), (min_temp -32)/1.8, LIKE("f","f"), min_temp)  | table "Minimum Temp"</query>
+          <query>search thermostats_id=$thermostats_id$   |  eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval ambient_temperature_f2=mvindex(ambient_temperature_f,idx) | stats min(ambient_temperature_f2) as min_temp | eval "Minimum Temp"=case(LIKE("f","c"), (min_temp -32)/1.8, LIKE("f","f"), min_temp)  | table "Minimum Temp"</query>
         </search>
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
@@ -70,7 +70,7 @@
       <single>
         <title>Maximum Inside Temperature</title>
         <search base="baseSearch">
-          <query>search thermostats_id=$thermostats_id$  | stats max(ambient_temperature_f) as max_temp |eval "Maximum Temp"=case(LIKE("$units$","c"), (max_temp -32)/1.8, LIKE("$units$","f"), max_temp)  | table "Maximum Temp"</query>
+          <query>search thermostats_id=$thermostats_id$  |  eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval ambient_temperature_f2=mvindex(ambient_temperature_f,idx)| stats max(ambient_temperature_f2) as max_temp |eval "Maximum Temp"=case(LIKE("$units$","c"), (max_temp -32)/1.8, LIKE("$units$","f"), max_temp)  | table "Maximum Temp"</query>
         </search>
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
@@ -90,7 +90,7 @@
       <single>
         <title>Minimum Humidity</title>
         <search base="baseSearch">
-          <query>search  thermostats_id=$thermostats_id$| stats min(humidity) as "Minimum Humidity"</query>
+          <query>search  thermostats_id=$thermostats_id$| eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval humidity2=mvindex(humidity,idx)| stats min(humidity2) as "Minimum Humidity"</query>
         </search>
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
@@ -109,7 +109,7 @@
       <single>
         <title>Maximum Humidity</title>
         <search base="baseSearch">
-          <query>search index=nest thermostats_id=$thermostats_id$  | stats max(humidity) as "Maximum Humidity"</query>
+          <query>search index=nest thermostats_id=$thermostats_id$  | eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval humidity2=mvindex(humidity,idx)| stats max(humidity2) as "Maximum Humidity"</query>
         </search>
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
@@ -131,15 +131,7 @@
       <chart>
         <title>In Heat, Cool, and Eco Modes</title>
         <search base="baseSearch">
-          <query>search index=nest $thermostats_id=$thermostats_id$ hvac_mode!=heat-cool AND hvac_mode!=off | timechart span=1m max(target_temperature_f) AS temps |  eval "Temperature"=case(LIKE("$units$","c"), (temps -32)/1.8, LIKE("$units$","f"), temps)  | stats count by "Temperature"</query>
-          <progress>
-            <condition match="'job.resultCount' &gt; 0">
-              <set token="panel_show1">true</set>
-            </condition>
-            <condition>
-              <unset token="panel_show1"></unset>
-            </condition>
-          </progress>
+          <query>search index=nest $thermostats_id=$thermostats_id$ hvac_mode!=heat-cool AND hvac_mode!=off | eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval target_temperature_f2=mvindex(target_temperature_f,idx)|timechart span=1m max(target_temperature_f2) AS temps |  eval "Temperature"=case(LIKE("$units$","c"), (temps -32)/1.8, LIKE("$units$","f"), temps)  | stats count by "Temperature"</query>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
@@ -171,15 +163,7 @@
       <chart>
         <title>In Heat/Cool Mode</title>
         <search base="baseSearch">
-          <query>search index=nest hvac_mode=heat-cool thermostats_id=$thermostats_id$  | timechart span=1m max(target_temperature_high_f) AS high_temps max(target_temperature_low_f) AS low_temps max(ambient_temperature_f) AS actual_temp |  eval "High Temperature"=case(LIKE("$units$","c"), (high_temps -32)/1.8, LIKE("$units$","f"), high_temps)  |eval "Inside Temperature"=case(LIKE("f","c"), (actual_temp -32)/1.8, LIKE("f","f"), actual_temp) |eval "Low Temperature"=case(LIKE("$units$","c"), (low_temps -32)/1.8, LIKE("$units$","f"), low_temps) | fields - high_temps low_temps actual_temp</query>
-          <progress>
-            <condition match="'job.resultCount' &gt; 0">
-              <set token="panel_show">true</set>
-            </condition>
-            <condition>
-              <unset token="panel_show"></unset>
-            </condition>
-          </progress>
+          <query>search index=nest hvac_mode=heat-cool thermostats_id=$thermostats_id$  | eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval target_temperature_high_f2=mvindex(target_temperature_high_f,idx)| eval target_temperature_low_f2=mvindex(target_temperature_low_f,idx)| eval ambient_temperature_f2=mvindex(ambient_temperature_f,idx)| timechart span=1m max(target_temperature_high_f2) AS high_temps max(target_temperature_low_f2) AS low_temps max(ambient_temperature_f2) AS actual_temp |  eval "High Temperature"=case(LIKE("$units$","c"), (high_temps -32)/1.8, LIKE("$units$","f"), high_temps)  |eval "Inside Temperature"=case(LIKE("f","c"), (actual_temp -32)/1.8, LIKE("f","f"), actual_temp) |eval "Low Temperature"=case(LIKE("$units$","c"), (low_temps -32)/1.8, LIKE("$units$","f"), low_temps) | fields - high_temps low_temps actual_temp</query>
         </search>
         <option name="charting.chart">line</option>
         <option name="charting.drilldown">none</option>
@@ -188,8 +172,8 @@
     <panel>
       <chart>
         <title>Percent of Time at Various Humidities</title>
-        <search>
-          <query>index=nest thermostats_id=$thermostats_id$  |stats count by humidity</query>
+        <search base="baseSearch">
+          <query>search thermostats_id=$thermostats_id$| eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval humidity2=mvindex(humidity,idx)| bucket span=5m _time | stats count by humidity</query>
           <earliest>$time_picked.earliest$</earliest>
           <latest>$time_picked.latest$</latest>
         </search>
@@ -224,7 +208,7 @@
       <chart>
         <title>Temperature - Over Time</title>
         <search>
-          <query>(index=nest AND thermostats_id=$thermostats_id$ AND hvac_mode=$hvac_mode$) OR index=main | rename target_temperature_f AS "Target Inside Temperature (F)" ambient_temperature_f AS "Actual Inside Temperature (F)" |timechart span=5m max("Target Inside Temperature (F)") AS targ_inside max("Actual Inside Temperature (F)") AS actual_inside max(temp_f) AS outside |  eval "Target Inside Temperature"=case(LIKE("$units$","c"), (targ_inside -32)/1.8, LIKE("$units$","f"), targ_inside) | eval "Actual Inside Temperature"=case(LIKE("$units$","c"), (actual_inside -32)/1.8, LIKE("$units$","f"), actual_inside) | eval "Outside Temperature"=case(LIKE("$units$","c"), (outside -32)/1.8, LIKE("$units$","f"), outside)| fields - targ_inside actual_inside outside</query>
+          <query>(index=nest AND thermostats_id=$thermostats_id$ AND hvac_mode=$hvac_mode$) OR index=main | eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval target_temperature_f2=mvindex(target_temperature_f,idx)|eval ambient_temperature_f2=mvindex(ambient_temperature_f,idx)| rename target_temperature_f2 AS "Target Inside Temperature (F)" ambient_temperature_f2 AS "Actual Inside Temperature (F)" |timechart span=5m max("Target Inside Temperature (F)") AS targ_inside max("Actual Inside Temperature (F)") AS actual_inside max(temp_f) AS outside |  eval "Target Inside Temperature"=case(LIKE("$units$","c"), (targ_inside -32)/1.8, LIKE("$units$","f"), targ_inside) | eval "Actual Inside Temperature"=case(LIKE("$units$","c"), (actual_inside -32)/1.8, LIKE("$units$","f"), actual_inside) | eval "Outside Temperature"=case(LIKE("$units$","c"), (outside -32)/1.8, LIKE("$units$","f"), outside)| fields - targ_inside actual_inside outside</query>
           <earliest>$time_picked.earliest$</earliest>
           <latest>$time_picked.latest$</latest>
         </search>
@@ -263,7 +247,7 @@
       <chart>
         <title>Percent of Time in Energy Saving Temperature</title>
         <search base="baseSearch">
-          <query>search index=nest thermostats_id=$thermostats_id$ | eval has_leaf2 = case(has_leaf=="true","Energy Saving", has_leaf=="false", "Not Energy Saving") | rename has_leaf2 as "Energy Saving?" | table "Energy Saving?" | stats count by "Energy Saving?"</query>
+          <query>search index=nest thermostats_id=$thermostats_id$ | eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval has_leaf2=mvindex(has_leaf,idx)| eval has_leaf3 = case(has_leaf=="true","Energy Saving", has_leaf=="false", "Not Energy Saving") | rename has_leaf3 as "Energy Saving?" | bucket _time span=5m | dedup has_leaf _time |  table _time "Energy Saving?" | stats count by "Energy Saving?"</query>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
@@ -294,7 +278,7 @@
       <chart>
         <title>Timechart of Energy Saving Mode</title>
         <search base="baseSearch">
-          <query>search index=nest thermostats_id=$thermostats_id$ | eval has_leaf2 = case(has_leaf=="true","Energy Saving", has_leaf=="false", "Not Energy Saving") | rename has_leaf2 as "Energy Saving?" | bucket _time span=5m | dedup has_leaf _time |  table _time "Energy Saving?" | timechart span=1m count by "Energy Saving?" | search "Energy Saving"!=0 OR "Not Energy Saving"!=0</query>
+          <query>search index=nest thermostats_id=$thermostats_id$ | eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,thermostats_id) | eval has_leaf2=mvindex(has_leaf,idx)| eval has_leaf3 = case(has_leaf=="true","Energy Saving", has_leaf=="false", "Not Energy Saving") | rename has_leaf3 as "Energy Saving?" | bucket _time span=5m | dedup has_leaf _time |  table _time "Energy Saving?" | timechart span=1m count by "Energy Saving?" | search "Energy Saving"!=0 OR "Not Energy Saving"!=0</query>
         </search>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
