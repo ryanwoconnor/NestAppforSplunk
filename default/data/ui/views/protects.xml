@@ -1,26 +1,29 @@
 <form>
   <label>Protects</label>
+  <search id="baseSearch">
+    <query>index=nest sourcetype=nest_devices | fields idx name last_manual_test_time name_long alert_level battery_health thermostats_id away battery_health ambient_temperature_f smoke_co_alarms_id city index sourcetype source structure_id</query>
+    <earliest>-7d@d</earliest>
+    <latest>now</latest>
+  </search>
   <fieldset submitButton="false">
-    <input type="dropdown" token="deviceid" searchWhenChanged="true">
+    <input type="dropdown" token="smoke_co_alarms_id" searchWhenChanged="true">
       <label>Nest Smoke Alarm</label>
       <selectFirstChoice>true</selectFirstChoice>
       <search>
-        <query>index=nest smoke_co_alarms_id=* | mvexpand smoke_co_alarms_id | eval new=name." - ".name_long | rename smoke_co_alarms_id AS device_id | table new device_id | dedup device_id</query>
+        <query>index=nest smoke_co_alarms_id=*| eval smoke_co_alarms_idIdx=smoke_co_alarms_id | mvexpand smoke_co_alarms_id | eval idx=mvfind(smoke_co_alarms_idIdx,smoke_co_alarms_id) | eval id=mvindex(smoke_co_alarms_idIdx,idx) | eval name2=mvindex(smoke_co_alarms_name_long,idx)  | table id name2 name | rename id as smoke_co_alarms_id name2 as smoke_co_alarms_name_long | dedup smoke_co_alarms_id smoke_co_alarms_name_long | eval name=name."-".smoke_co_alarms_name_long</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
-      <fieldForLabel>new</fieldForLabel>
-      <fieldForValue>device_id</fieldForValue>
+      <fieldForLabel>name</fieldForLabel>
+      <fieldForValue>smoke_co_alarms_id</fieldForValue>
     </input>
   </fieldset>
   <row>
     <panel>
       <single>
         <title>Smoke Alarm - Days since last Manual Test</title>
-        <search>
-          <query>index=nest data.devices.smoke_co_alarms.$deviceid$.device_id=$deviceid$ | rename data.devices.smoke_co_alarms.$deviceid$.last_manual_test_time as "last_manual_test_time"| table sourcetype last_manual_test_time | eval now=now() | eval last_time= strptime(last_manual_test_time, "%Y-%m-%dT%H:%M:%S.%9QZ") | eval last_time = last_time-18000| eval diff=(now-last_time)/60/60/24 | sort+diff | head 1 |rename diff as "Days Since Last Manual Test" | table "Days Since Last Manual Test"</query>
-          <earliest>-4h@m</earliest>
-          <latest>now</latest>
+        <search base="baseSearch">
+          <query>search index=nest smoke_co_alarms_id=$smoke_co_alarms_id$ |eval idx=mvfind(smoke_co_alarms_id,"$smoke_co_alarms_id$") | eval last_manual_test_time2=mvindex(last_manual_test_time,idx) | eval now=now() | eval last_time= strptime(last_manual_test_time2, "%Y-%m-%dT%H:%M:%S.%9QZ") | eval last_time = last_time-18000| eval diff=(now-last_time)/60/60/24 | sort+diff | head 1 |rename diff as "Days Since Last Manual Test" | table "Days Since Last Manual Test"</query>
         </search>
         <option name="wrap">undefined</option>
         <option name="rowNumbers">undefined</option>
@@ -39,8 +42,8 @@
     <panel>
       <single>
         <title>Battery Health</title>
-        <search>
-          <query>index=nest data.devices.smoke_co_alarms.$deviceid$.device_id=$deviceid$  | table data.devices.smoke_co_alarms.$deviceid$.battery_health | rename data.devices.smoke_co_alarms.$deviceid$.battery_health as battery_health | search battery_health=*| table battery_health | dedup battery_health</query>
+        <search base="baseSearch">
+          <query>search index=nest smoke_co_alarms_id=$smoke_co_alarms_id$ |eval idx=mvfind(smoke_co_alarms_id,"$smoke_co_alarms_id$") | eval battery_health2=mvindex(battery_health,idx) | table battery_health2 | head 1 | eval alert_level=case(battery_health2=="ok",1,1=1,2) | rangemap field=alert_level low=1-1 severe=2-2</query>
           <earliest>-4h@m</earliest>
           <latest>now</latest>
         </search>
@@ -60,17 +63,16 @@
   <row>
     <panel>
       <table>
-        <search>
-          <query>index=nest data.devices.smoke_co_alarms.$deviceid$.device_id=$deviceid$   | rename data.devices.smoke_co_alarms.$deviceid$.smoke_alarm_state as "Alarm State"
-data.devices.smoke_co_alarms.$deviceid$.name_long as "Device Name" | table _time "Device Name" "Alarm State" | search "Alarm State"!="ok"</query>
-          <earliest>0</earliest>
-          <latest></latest>
+        <title>Alarms</title>
+        <search base="baseSearch">
+          <query>search index=nest smoke_co_alarms_id=$smoke_co_alarms_id$ |eval idx=mvfind(smoke_co_alarms_id,"$smoke_co_alarms_id$") | eval smoke_alarm_state2=mvindex(smoke_alarm_state,idx)|eval smoke_co_alarms_name_long2=mvindex(smoke_co_alarms_name_long,idx)| rename smoke_alarm_state2 as "Alarm State"
+smoke_co_alarms_name_long2 as "Device Name" | table _time "Device Name" "Alarm State" | search "Alarm State"!="ok"</query>
         </search>
-        <option name="wrap">true</option>
-        <option name="rowNumbers">false</option>
-        <option name="drilldown">cell</option>
-        <option name="dataOverlayMode">none</option>
         <option name="count">10</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="rowNumbers">false</option>
+        <option name="wrap">true</option>
       </table>
     </panel>
   </row>
