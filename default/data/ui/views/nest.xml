@@ -1,7 +1,7 @@
 <form>
   <label>Nest</label>
   <search id="baseSearch">
-    <query>index=nest sourcetype=nest_devices | fields name name_long thermostats_id away battery_health ambient_temperature_f smoke_co_alarms_id city index sourcetype source structure_id</query>
+    <query>index=nest sourcetype=nest_devices | fields average_current_temp name name_long thermostats_id away battery_health ambient_temperature_f smoke_co_alarms_id city index sourcetype source structure_id</query>
     <earliest>-4h@h</earliest>
     <latest>now</latest>
   </search>
@@ -30,8 +30,8 @@
       <single>
         <title>Current Temperature Outside</title>
         <search base="baseSearch">
-          <query>search name=$location$  | mvexpand city| map search="search index=* city=$$city$$ temp_f=*" | eval temp=case(LIKE("$units$","c"), (temp_f -32)/1.8, LIKE("$units$","f"), temp_f)  | timechart cont=FALSE span=5m first(temp)</query>
-          <progress>
+          <query>search name=$location$  | mvexpand city| map search="search index=main sourcetype=wunderground city=$$city$$ temp_f=*" | eval temp=case(LIKE("$units$","c"), (temp_f -32)/1.8, LIKE("$units$","f"), temp_f)  | timechart cont=FALSE span=5m first(temp)</query>
+                  <progress>
             <condition match="'job.resultCount' &gt; 0">
               <set token="panel_show">true</set>
             </condition>
@@ -58,9 +58,9 @@
     </panel>
     <panel depends="$panel_show2$">
       <single>
-        <title>Current Temperature Inside</title>
+        <title>Average Temperature Inside</title>
         <search base="baseSearch">
-          <query>search name=$location$ |  table _time ambient_temperature_f  | eval "Current Temperature"=case(LIKE("$units$","c"), (ambient_temperature_f -32)/1.8, LIKE("$units$","f"), ambient_temperature_f)  | timechart cont=FALSE span=5m first("Current Temperature")</query>
+          <query>search name=$location$ |  table _time ambient_temperature_f  | mvexpand ambient_temperature_f| stats avg(ambient_temperature_f) as "average_current_temp" | eval "Current Temperature"=case(LIKE("f","c"), (average_current_temp -32)/1.8, LIKE("f","f"), average_current_temp)  | fields - average_current_temp</query>
           <progress>
             <condition match="'job.resultCount' &gt; 0">
               <set token="panel_show2">true</set>
@@ -72,26 +72,33 @@
         </search>
         <option name="colorBy">trend</option>
         <option name="colorMode">none</option>
+        <option name="drilldown">none</option>
+        <option name="linkView">search</option>
         <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
+        <option name="rangeValues">[0,30,70,100]</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
         <option name="trendColorInterpretation">inverse</option>
         <option name="trendDisplayMode">absolute</option>
+        <option name="trendInterval">-1h</option>
+        <option name="unitPosition">after</option>
         <option name="useColors">1</option>
         <option name="useThousandSeparators">1</option>
-        <option name="drilldown">none</option>
-        <option name="linkView">search</option>
-        <option name="unitPosition">after</option>
-        <option name="rangeColors">["0x65a637","0x6db7c6","0xf7bc38","0xf58f39","0xd93f3c"]</option>
-        <option name="rangeValues">[0,30,70,100]</option>
-        <option name="trendInterval">-1h</option>
       </single>
     </panel>
-    <panel>
-      <single>
+    <panel depends="$panel_show5$">&gt;<single>
         <title>Smoke Alarm Battery Health</title>
         <search base="baseSearch">
           <query>search name=$location$ | mvexpand battery_health | dedup battery_health | stats count by battery_health | eval battery_health2=case(count&gt;1, "notOK", battery_health!="ok", "notOK", 1=1, "ok") | eval alert_level=case(battery_health2=="ok",1,1=1,2) | rangemap field=alert_level low=1-1 severe=2-2</query>
+          <progress>
+            <condition match="'job.resultCount' &gt; 0">
+              <set token="panel_show5">true</set>
+            </condition>
+            <condition>
+              <unset token="panel_show5"></unset>
+            </condition>
+          </progress>
         </search>
         <option name="wrap">undefined</option>
         <option name="rowNumbers">undefined</option>
