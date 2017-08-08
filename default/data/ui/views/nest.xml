@@ -5,7 +5,7 @@
       <label>Location</label>
       <selectFirstChoice>true</selectFirstChoice>
       <search>
-        <query>|inputlookup device_id_lookup | table name | dedup name</query>
+        <query>index=nest |fields name| table name | dedup name</query>
         <earliest>-24h@h</earliest>
         <latest>now</latest>
       </search>
