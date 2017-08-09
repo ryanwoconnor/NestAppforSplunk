@@ -60,7 +60,7 @@
       <single>
         <title>Average Temperature Inside</title>
         <search base="baseSearch">
-          <query>search name=$location$ |  table _time ambient_temperature_f  | mvexpand ambient_temperature_f| stats avg(ambient_temperature_f) as "average_current_temp" | eval "Current Temperature"=case(LIKE("f","c"), (average_current_temp -32)/1.8, LIKE("f","f"), average_current_temp)  | fields - average_current_temp</query>
+          <query>search name=$location$ |  table _time ambient_temperature_f  | mvexpand ambient_temperature_f| stats avg(ambient_temperature_f) as "average_current_temp" | eval "Current Temperature"=case(LIKE("$units$","c"), (average_current_temp -32)/1.8, LIKE("$units$","f"), average_current_temp)  | fields - average_current_temp</query>
           <progress>
             <condition match="'job.resultCount' &gt; 0">
               <set token="panel_show2">true</set>

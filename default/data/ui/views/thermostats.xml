@@ -1,7 +1,7 @@
 <form refresh="3600">
   <label>Thermostats</label>
   <search id="baseSearch">
-    <query>index=nest sourcetype=nest_devices | fields name name_long thermostats_id humidity ambient_temperature* target_temperature* has_leaf away battery_health ambient_temperature_f smoke_co_alarms_id city index sourcetype source structure_id</query>
+    <query>index=nest sourcetype=nest_devices | fields name name_long thermostats_id humidity ambient_temperature* target_temperature* has_leaf away battery_health ambient_temperature_f smoke_co_alarms_id city index sourcetype source structure_id units</query>
     <earliest>$time_picked.earliest$</earliest>
     <latest>$time_picked.latest$</latest>
   </search>
@@ -50,7 +50,7 @@
       <single>
         <title>Minimum Inside Temperature</title>
         <search base="baseSearch">
-          <query>search thermostats_id=$thermostats_id$   |  eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval ambient_temperature_f2=mvindex(ambient_temperature_f,idx) | stats min(ambient_temperature_f2) as min_temp | eval "Minimum Temp"=case(LIKE("f","c"), (min_temp -32)/1.8, LIKE("f","f"), min_temp)  | table "Minimum Temp"</query>
+          <query>search thermostats_id=$thermostats_id$   |  eval thermostats_idIdx=thermostats_id | mvexpand thermostats_id | eval idx=mvfind(thermostats_idIdx,"$thermostats_id$") | eval ambient_temperature_f2=mvindex(ambient_temperature_f,idx) | stats min(ambient_temperature_f2) as min_temp | eval "Minimum Temp"=case(LIKE("$units$","c"), (min_temp -32)/1.8, LIKE("$units$","f"), min_temp)  | table "Minimum Temp"</query>
         </search>
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
