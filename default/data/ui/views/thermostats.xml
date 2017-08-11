@@ -34,16 +34,14 @@
     <input type="dropdown" token="hvac_mode" searchWhenChanged="true">
       <label>Mode</label>
       <choice value="*">*</choice>
-      <fieldForLabel>hvac_mode</fieldForLabel>
-      <fieldForValue>hvac_mode</fieldForValue>
-      <search>
-        <query>|inputlookup hvac_mode.csv</query>
-        <earliest>-7d@h</earliest>
-        <latest>now</latest>
-      </search>
+      <choice value="off">off</choice>
+      <choice value="eco">eco</choice>
+      <choice value="heat-cool">heat-cool</choice>
+      <choice value="heat">heat</choice>
+      <choice value="cool">cool</choice>
       <default>*</default>
       <initialValue>*</initialValue>
-    </input>
+    </input> 
   </fieldset>
   <row>
     <panel>
@@ -55,7 +53,6 @@
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
         <option name="drilldown">none</option>
-        <option name="linkView">search</option>
         <option name="numberPrecision">0</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
@@ -75,7 +72,6 @@
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
         <option name="drilldown">none</option>
-        <option name="linkView">search</option>
         <option name="numberPrecision">0</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
@@ -102,7 +98,6 @@
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
         <option name="drilldown">none</option>
-        <option name="linkView">search</option>
       </single>
     </panel>
     <panel>
@@ -121,7 +116,6 @@
         <option name="useColors">0</option>
         <option name="useThousandSeparators">1</option>
         <option name="drilldown">none</option>
-        <option name="linkView">search</option>
       </single>
     </panel>
   </row>

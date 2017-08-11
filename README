@@ -1,47 +1,45 @@
-#System Requirements: This app is mostly tested on Ubuntu though it should work on most Linux distros. 
-#
-#Installation:
-#This app install is simple. The most difficult part is obtaining an access_token but obtaining one is fairly straightforward. 
-#If you need assistance in obtaining an access_token you can use the following instructions or reach out on Splunk Answers. 
-#
-#
-#Obtaining an access_token for your Nest Account:
-#
-#You are more than welcome to create your own Nest app on developers.nest.com. These instructions would be slightly different if you go that route. However if you don't want to create your own Nest App you can leverage the one we have created by using the following instructions. 
-#
-#1. Visit the following URL: https://home.nest.com/login/oauth2?client_id=f4151b70-db18-43ac-a12b-1fbcd5f1cba9&state=STATE
-#2. Click accept to allow this app to query your device. 
-#3. Copy the Authorization Code Provided to you
-#4. Copy and paste the following command and replace <Auth_Code_Splunk> with the Authorization Code provded:
-#   
-#   curl -X POST "https://api.home.nest.com/oauth2/access_token?client_id=f4151b70-db18-43ac-a12b-1fbcd5f1cba9&code=<Auth_Code_Splunk>&client_secret=mdM3hEligo2PfGBsOMsaHFdvI&grant_type=authorization_code"
-#
-#5. Run the new curl command from the command line. 
-#6. Copy and paste the access_token into a new stanza in nest_tokens.conf in the local directory. 
-#7. Restart Splunk. 
-#
-#
-#
-#
-#Configuration:
-#
-#For the most part this app should just work. If you have the TA-wunderground app you can also install that for your city. https://splunkbase.splunk.com/app/1257/
-#
-#If you do have that app installed, feel free to update the lookup table home_view_city. 
-#There are two relevant fields:
-#name - this is the name of your nest account. It can be found in your data under data.structures.<account_id>.name
-#city - this is the City configured in the wunderground TA. 
-#
-#
-#Troubleshooting:
-#
-#This app is brand new so if you are having issues with it please reach out on Splunk Answers or contact me directly, roconnor@splunk.com. Look forward to hearing from you.
-#
-#
-#Running the app: 
-#
-#Simply click the app in the App Drop Down and you should be off and running. 
-#
-#Note that the saved search "Generate Device IDs" may take up to an hour to populate the device_lookup_id.csv file. You can manually run the search if you don't want to wait. 
-#
-#Some other dashboards will only populate if you have certain nest devices. For example if you don't have a Nest Thermostat, that dashboard won't be relevant to you.
+
+Nest App for Splunk Documentation
+====================
+
+Installation:
+---------------------
+To install this add-on, you can can navigate to “Manage Apps” in your Splunk installation and then “Browse More Apps”. From there you can find the Nest App for Splunk and install it. 
+
+Distributed Environment requirements: In a distributed environment, this App is only needed on your Search Head. 
+
+Configuration:
+---------------------
+You do not need to do anything to configure this app to view data from your Nest devices. If you’d like to see information about outside temperature, you can follow the instructions for the Weather Underground section below. 
+
+Weather Underground:
+---------------------
+One optional configuration step you can take is to configure the TA-wunderground app. This will allow for some dashboards to populate different panels. For instructions on installing that app visit https://splunkbase.splunk.com/app/1257/
+
+If you want to integrate that data into the Nest App for Splunk, you'll need to update the lookup table named **home_view_city**. 
+
+There are two relevant fields in here:
+*name* - this is the name of your nest account. It can be found in your data under the “name” field. 
+*city* - this is the City configured in the wunderground TA. 
+
+Running the app:
+---------------------
+Simply click the app in the App Drop Down and you should be off and running. 
+
+
+Troubleshooting
+---------------------
+
+There are three reasons you may not see data in the dashboard right away. 
+
+1. You simply just haven't had any data come into Splunk yet. You can attempt to interact with your thermostat in order to generate some data. 
+2. Some dashboards will only populate if you have certain nest devices. For example if you don't have a Nest Thermostat, that dashboard won't be relevant to you.
+
+Feature Requests
+---------------------
+
+If there is a visualization or feature you'd like to see added, please e-mail us and we'll see what we can do.
+
+Application Support
+---------------------
+Email support for this app is available during weekday business hours (US, East Coast).
