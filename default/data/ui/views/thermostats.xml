@@ -75,7 +75,6 @@
         <option name="colorBy">value</option>
         <option name="colorMode">none</option>
         <option name="drilldown">none</option>
-        <option name="linkView">search</option>
         <option name="numberPrecision">0</option>
         <option name="showSparkline">1</option>
         <option name="showTrendIndicator">1</option>
