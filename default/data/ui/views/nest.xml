@@ -31,7 +31,7 @@
         <title>Current Temperature Outside</title>
         <search base="baseSearch">
           <query>search name=$location$  | mvexpand city| map search="search index=main sourcetype=wunderground city=$$city$$ temp_f=*" | eval temp=case(LIKE("$units$","c"), (temp_f -32)/1.8, LIKE("$units$","f"), temp_f)  | timechart cont=FALSE span=5m first(temp)</query>
-                  <progress>
+          <progress>
             <condition match="'job.resultCount' &gt; 0">
               <set token="panel_show">true</set>
             </condition>
@@ -129,18 +129,9 @@
             </condition>
           </progress>
         </search>
-        <option name="colorBy">value</option>
-        <option name="colorMode">none</option>
-        <option name="numberPrecision">0</option>
-        <option name="showSparkline">true</option>
-        <option name="showTrendIndicator">true</option>
-        <option name="trendColorInterpretation">standard</option>
-        <option name="trendDisplayMode">absolute</option>
-        <option name="useColors">false</option>
-        <option name="useThousandSeparators">true</option>
-        <option name="linkView">search</option>
         <option name="charting.axisLabelsX.majorLabelStyle.overflowMode">ellipsisNone</option>
         <option name="charting.axisLabelsX.majorLabelStyle.rotation">0</option>
+        <option name="charting.axisTitleX.text">Time</option>
         <option name="charting.axisTitleX.visibility">visible</option>
         <option name="charting.axisTitleY.visibility">visible</option>
         <option name="charting.axisTitleY2.visibility">visible</option>
@@ -165,10 +156,10 @@
       </chart>
     </panel>
     <panel depends="$panel_show4$">
-      <title>Number of Devices</title>
       <table>
+        <title>Number of Devices</title>
         <search base="baseSearch">
-          <query>search name=$location$ | table name smoke_co_alarms_id thermostats_id | stats dc(thermostats_id) AS "Thermostats" dc(smoke_co_alarms_id) AS "Smoke Alarms" by name</query>
+          <query>search name=$location$ | table name smoke_co_alarms_id thermostats_id | stats dc(thermostats_id) AS "Thermostats" dc(smoke_co_alarms_id) AS "Smoke Alarms" by name | rename name as "Account Name"</query>
           <progress>
             <condition match="'job.resultCount' &gt; 0">
               <set token="panel_show4">true</set>
@@ -180,7 +171,7 @@
         </search>
         <option name="count">10</option>
         <option name="dataOverlayMode">none</option>
-        <option name="drilldown">cell</option>
+        <option name="drilldown">none</option>
         <option name="rowNumbers">false</option>
         <option name="wrap">true</option>
       </table>
