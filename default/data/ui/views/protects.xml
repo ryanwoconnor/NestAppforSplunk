@@ -1,7 +1,7 @@
 <form>
   <label>Protects</label>
   <search id="baseSearch">
-    <query>index=nest sourcetype=nest_devices | fields idx name last_manual_test_time name_long alert_level battery_health thermostats_id away battery_health ambient_temperature_f smoke_co_alarms_id city index sourcetype source structure_id</query>
+    <query>index=nest sourcetype=nest_devices | fields idx name last_manual_test_time name_long alert_level battery_health smoke_alarm_state thermostats_id away battery_health ambient_temperature_f smoke_co_alarms_id city index sourcetype source structure_id</query>
     <earliest>-7d@d</earliest>
     <latest>now</latest>
   </search>
